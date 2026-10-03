@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "doconda": {
+      "command": "npx",
+      "args": ["-y", "@doconda/mcp"],
+      "env": { "DOCONDA_API_KEY": "${DOCONDA_API_KEY}" }
+    }
+  }
+}

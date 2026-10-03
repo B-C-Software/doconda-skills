@@ -1,0 +1,17 @@
+{
+  "name": "doconda",
+  "owner": {
+    "name": "Doconda",
+    "url": "https://doconda.com"
+  },
+  "plugins": [
+    {
+      "name": "doconda",
+      "source": "./",
+      "description": "Create, review and edit Word, PowerPoint, Excel and PDF documents with Doconda: the skill to integrate its API and SDK, plus its MCP server."
+    }
+  ],
+  "metadata": {
+    "description": "Doconda plugins: create, review and edit Word, PowerPoint, Excel and PDF documents."
+  }
+}
