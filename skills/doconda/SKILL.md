@@ -103,7 +103,7 @@ Review never changes text or values: it flags them. Edit reports each change (`r
 ## Links expire
 
 `doc.outputs[].url` lasts **5 minutes**. Don't store URLs: store `doc.id` and call `documents.outputs(id)` /
-`documents.download(id, kind)` when needed. An artifact's page link does not expire (delete the artifact to take it down).
+`documents.download(id, kind)` when needed. An artifact's page link never changes and works until its retention ends (`expires_at`).
 
 ## Long work, live progress
 
@@ -125,16 +125,18 @@ The SDK retries network/429/5xx with an automatic `Idempotency-Key`. If **your**
 retries, double clicks), pass a stable key: `create(body, { idempotencyKey: \`invoice-${id}\` })` (24 h). With raw HTTP,
 always send `Idempotency-Key` on `POST /documents`.
 
-## Privacy
+## Retention
 
-`store: false` (per request) or "Store nothing" (per project): content is deleted 15 minutes after it finishes; download
-it right away. `/report` and `/events` then return `410 content_deleted`.
+Every document (artifacts too) is kept for its `retention` once it finishes: `none` (15 minutes), `1d`, `7d`, `30d`
+(default) or `90d`; the project sets the default, a request can ask for another. Then its content is deleted
+(`expires_at` says when; `/report` and `/events` return `410 content_deleted`). Download the files before, or have a
+webhook take them as soon as a document finishes.
 
 ## Artifacts
 
 ```ts
 const doc = await doconda.documents.create({ format: "artifact", prompt: "Poll for Friday's menu with live results" })
-const [page] = await doconda.documents.outputs(doc.id) // embed page.url in an <iframe>; it does not expire
+const [page] = await doconda.documents.outputs(doc.id) // embed page.url in an <iframe>; it works until doc.expires_at
 const votes = await doconda.documents.data(doc.id, "votes") // [{ key, data, updated_at }]
 ```
 

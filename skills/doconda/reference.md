@@ -65,10 +65,10 @@ rejected), `edits[]` (edit changes, before/after), `changes` (versions), `key_da
 | `idempotency_request_in_progress` | 409 | retry in seconds |
 | `idempotency_key_reused` | 422 | same key, different body |
 | `not_an_artifact` / `artifact_is_local` / `too_many_records` | 409 | artifact data |
-| `content_deleted` / `events_expired` | 410 | content gone (`store: false`) / events > 7 days |
+| `content_deleted` / `events_expired` | 410 | retention ended / events > 7 days |
 | `file_rejected` | 422 | unsupported or macro file |
 | `file_too_large` / `record_too_large` | 413 | 20 MB / 16 KB |
-| `project_does_not_store` | 422 | artifact must be `local` |
+| `retention_none_shared` | 422 | with `retention: none`, an artifact must be `local` |
 | `rate_limited` | 429 | 120 docs/min per organization; artifacts 1200 reads, 120 writes/min |
 | `feature_unavailable` | 501 | AI disabled in that deployment |
 | `internal_error` | 500 | retry; report `request_id` |
