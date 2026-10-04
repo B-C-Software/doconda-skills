@@ -13,7 +13,7 @@
 | GET | `/documents/{id}/outputs` | `documents.outputs` / `download` |
 | GET | `/documents/{id}/report` | `documents.report` |
 | GET | `/documents/{id}/data[/{collection}]` | `documents.data` |
-| POST | `/extract` | — any file → `{ markdown, chars, truncated, pages }` |
+| POST | `/extract` | — any file → `{ id, markdown, chars, truncated, pages }`; nothing kept; past 120 s `202` → `GET /extract/{id}` |
 | POST | `/files` (multipart `file`, or JSON `url`/`data`) | `files.upload` |
 | GET / DELETE | `/files/{id}` | `files.get` / `files.delete` |
 
@@ -23,13 +23,13 @@ MCP: `https://api.{eu|us}.doconda.com/mcp` (Streamable HTTP) or `npx -y @doconda
 
 | Field | Type | Notes |
 |---|---|---|
-| `operation` | `create` (default) · `review` · `edit` · `extract` | |
+| `operation` | `create` (default) · `review` · `edit` | reading is `POST /extract` |
 | `format` | `docx` · `pdf` · `pptx` · `xlsx` · `artifact` | create; inferred from `prompt` if omitted |
 | `prompt` | string 3–8000 | create (AI writes) or edit (what to change) |
 | `content.markdown` | string ≤ 500 000 | create from your text; one of `prompt`/`content` |
 | `style` | string ≤ 1000 | free text; unsupported parts → `style_unsupported` |
 | `sources` | ≤ 15 file refs | ≤ 5 documents + ≤ 10 images |
-| `file` | file ref | review / edit / extract |
+| `file` | file ref | review / edit |
 | `quality` | `auto` · `fast` · `standard` · `best` | create / edit |
 | `max_quality` | `fast` · `standard` · `best` | cap for `auto` |
 | `stream` | bool | SSE on this connection |
