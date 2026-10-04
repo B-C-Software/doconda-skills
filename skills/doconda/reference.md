@@ -101,7 +101,7 @@ Content: `style.resolved`, `content.block_started`, `content.block_delta { text 
 `edit.planned`, `edit.operation_applied`, `edit.operation_rejected`. Process: `render.completed`,
 `validation.issue_found`, `validation.completed`, `repair.applied`, `repair.rejected`, `preview.page_ready { page, total }`,
 `output.available`. Agent: `quality.chosen`, `agent.step`, `agent.checked`, `agent.fallback`, `design.chosen`,
-`artifact.planned`. New types can appear: ignore unknown ones.
+`artifact.checked`. New types can appear: ignore unknown ones.
 
 ## Artifact page API (`window.doconda.db`)
 
