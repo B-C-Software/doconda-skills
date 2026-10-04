@@ -113,7 +113,9 @@ Review never changes text or values: it flags them. Edit reports each change (`r
   UI label. Ignore unknown event types.
 - Resume with `documents.events(id, { after: lastSequence })`. Disconnecting does not stop the document.
 - To show progress in a browser, proxy the stream through your server (SSE); never ship the key to the client.
-- Webhooks are **not available yet**; use the above.
+- Webhooks: register an HTTPS endpoint (`doconda.webhooks.create({ url })`, the `secret` comes once) and get a signed
+  POST when a document finishes (`document.ready` / `failed` / `canceled`, no content). Check it with
+  `verifyWebhook(rawBody, headers, secret)`, dedupe by `webhook-id`, then fetch the files.
 
 ## Errors and retries
 
