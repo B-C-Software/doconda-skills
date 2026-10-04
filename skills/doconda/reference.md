@@ -10,7 +10,7 @@
 | POST | `/documents/{id}/cancel` | `documents.cancel` |
 | POST | `/documents/{id}/versions` (multipart `file`) | — saves a hand-edited version: new doc, `parent_id`, free |
 | GET | `/documents/{id}/events` (`Last-Event-ID` or `?after=`) | `documents.events` / `wait` |
-| GET | `/documents/{id}/outputs?expires_in=` | `documents.outputs` / `download` |
+| GET | `/documents/{id}/outputs` | `documents.outputs` / `download` |
 | GET | `/documents/{id}/report` | `documents.report` |
 | GET | `/documents/{id}/data[/{collection}]` | `documents.data` |
 | POST | `/extract` | — any file → `{ markdown, chars, truncated, pages }` |
@@ -65,7 +65,7 @@ rejected), `edits[]` (edit changes, before/after), `changes` (versions), `key_da
 | `idempotency_request_in_progress` | 409 | retry in seconds |
 | `idempotency_key_reused` | 422 | same key, different body |
 | `not_an_artifact` / `artifact_is_local` / `too_many_records` | 409 | artifact data |
-| `link_expired` / `content_deleted` / `events_expired` | 410 | new link / content gone (`store: false`) / events > 7 days |
+| `content_deleted` / `events_expired` | 410 | content gone (`store: false`) / events > 7 days |
 | `file_rejected` | 422 | unsupported or macro file |
 | `file_too_large` / `record_too_large` | 413 | 20 MB / 16 KB |
 | `project_does_not_store` | 422 | artifact must be `local` |
@@ -77,7 +77,7 @@ rejected), `edits[]` (edit changes, before/after), `changes` (versions), `key_da
 
 `content_empty`, `file_rejected`, `docx_invalid`, `file_not_found`, `document_too_long` (edit > ~50 pages),
 `format_unclear` (set `format`), `edit_not_understood` / `edit_not_applied` (be more precise), `source_unreadable`,
-`generation_blocked` / `request_refused` (rephrase; harmful requests refused), `page_too_large`, `processing_failed`
+`generation_blocked` / `request_refused` (rephrase; harmful requests refused), `page_too_large`, `page_too_long`, `processing_failed`
 (retry later).
 
 ## Review issue codes (examples)
