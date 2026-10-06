@@ -20,7 +20,7 @@ Claude Code, as a plugin (the skill plus the Doconda MCP server):
 /plugin install doconda@doconda
 ```
 
-The MCP server reads your key from `DOCONDA_API_KEY` (`ak_eu_…` or `ak_us_…`, from the dashboard).
+The MCP server reads your key from `DOCONDA_API_KEY` (`ak_eu_…`, from the dashboard).
 
 Or by hand: copy `skills/doconda` into `~/.claude/skills/` (all projects) or `.claude/skills/` (one project).
 

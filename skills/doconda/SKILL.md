@@ -1,6 +1,6 @@
 ---
 name: doconda
-description: Integrate Doconda, the API that creates, reviews and edits Word, PowerPoint, Excel and PDF documents (and "artifacts", web pages with their own data) for apps and AI agents. Use when writing code that calls the Doconda API, the @doconda/sdk TypeScript SDK or the @doconda/mcp server; when generating .docx/.pptx/.xlsx/.pdf files from an app or agent; when the code imports @doconda/sdk, uses DOCONDA_API_KEY, an `ak_eu_`/`ak_us_` key or api.eu.doconda.com / api.us.doconda.com.
+description: Integrate Doconda, the API that creates, reviews and edits Word, PowerPoint, Excel and PDF documents (and "artifacts", web pages with their own data) for apps and AI agents. Use when writing code that calls the Doconda API, the @doconda/sdk TypeScript SDK or the @doconda/mcp server; when generating .docx/.pptx/.xlsx/.pdf files from an app or agent; when the code imports @doconda/sdk, uses DOCONDA_API_KEY, an `ak_eu_` key or api.eu.doconda.com, or imports the doconda Python package.
 ---
 
 # Doconda
@@ -14,16 +14,15 @@ Full field tables, error codes and review codes: [reference.md](reference.md). D
 
 ## Setup
 
-- API key per project, from the dashboard (**API keys**). The prefix is the region: `ak_eu_…` →
-  `https://api.eu.doconda.com/v1`, `ak_us_…` → `https://api.us.doconda.com/v1`. A key only works on its region
-  (`401 region_mismatch`).
+- API key per project, from the dashboard (**API keys**), `ak_eu_…`. Every key uses the same API:
+  `https://api.eu.doconda.com/v1`; documents and files are stored in the EU.
 - Keep it in `DOCONDA_API_KEY`. **Server side only**: the key gives access to every document in the project.
-- TypeScript: `npm install @doconda/sdk` (Node ≥ 20, no dependencies). Other languages: plain HTTP with
-  `Authorization: Bearer $DOCONDA_API_KEY`. There is no Python SDK; use `requests`/`httpx`.
+- TypeScript: `npm install @doconda/sdk` (Node ≥ 20, no dependencies). Python: `pip install doconda`. Other
+  languages: plain HTTP with `Authorization: Bearer $DOCONDA_API_KEY`.
 
 ```ts
 import { Doconda } from "@doconda/sdk"
-const doconda = new Doconda() // reads DOCONDA_API_KEY, picks the region from the key, retries 429/5xx/network twice
+const doconda = new Doconda() // reads DOCONDA_API_KEY, retries 429/5xx/network twice
 ```
 
 ## Pick the operation
@@ -121,7 +120,7 @@ Review never changes text or values: it flags them. Edit reports each change (`r
 
 API errors are RFC 9457 problem+json; the SDK throws `DocondaError` with `status`, `code` (stable — branch on it),
 `message`, `errors` (422 field paths) and `requestId`. Common: `input_invalid` (fix the field), `insufficient_balance`
-(402, top up), `unauthorized`, `region_mismatch`, `not_found`, `rate_limited` (120 documents/min per organization).
+(402, top up), `unauthorized`, `not_found`, `rate_limited` (120 documents/min per organization).
 
 The SDK retries network/429/5xx with an automatic `Idempotency-Key`. If **your** code may repeat an operation (job
 retries, double clicks), pass a stable key: `create(body, { idempotencyKey: \`invoice-${id}\` })` (24 h). With raw HTTP,
@@ -158,6 +157,6 @@ data in each visitor's browser (your program can't read it). No `sources` for ar
 
 - Don't build DOCX/PPTX/XLSX with another library and then send it to Doconda to "make it nice": send Markdown.
 - Don't call the API from the browser or commit the key.
-- Don't hardcode `baseUrl`; the key picks the region (`DOCONDA_BASE_URL` only for a local stack).
+- Don't set `baseUrl` in production (`DOCONDA_BASE_URL` only for a local stack).
 - Don't treat `status: "failed"` as a thrown error, or ignore `needs_review` / `style_unsupported`.
 - Don't persist output URLs.

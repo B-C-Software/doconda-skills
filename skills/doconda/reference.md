@@ -57,7 +57,6 @@ rejected), `edits[]` (edit changes, before/after), `changes` (versions), `key_da
 |---|---|---|
 | `input_invalid` | 422 | fix `errors[].path` |
 | `unauthorized` | 401 | bad/revoked key |
-| `region_mismatch` | 401 | use the key's region URL |
 | `insufficient_balance` | 402 | top up in the dashboard |
 | `session_required` | 403 | dashboard-only route |
 | `not_found` | 404 | wrong project/organization |
