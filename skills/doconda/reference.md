@@ -13,7 +13,7 @@
 | GET | `/documents/{id}/outputs` | `documents.outputs` / `download` |
 | GET | `/documents/{id}/report` | `documents.report` |
 | GET | `/documents/{id}/data[/{collection}]` | `documents.data` |
-| POST | `/extract` | — any file → `{ id, markdown, chars, truncated, pages }`; nothing kept; past 120 s `202` → `GET /extract/{id}` |
+| POST | `/extract` | `extract` — any file → `{ id, markdown, chars, truncated, pages }`; nothing kept; past 120 s `202` → `GET /extract/{id}` (the SDKs wait) |
 | POST | `/files` (multipart `file`, or JSON `url`/`data`) | `files.upload` |
 | GET / DELETE | `/files/{id}` | `files.get` / `files.delete` |
 
