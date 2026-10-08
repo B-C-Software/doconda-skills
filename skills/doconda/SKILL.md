@@ -43,7 +43,7 @@ contract…): Doconda infers it from the prompt; `doc.type` says what it chose.
 
 If the app already has the text (an LLM wrote it, a template filled it), send `content.markdown`, not `prompt`.
 Markdown supports headings, paragraphs, lists, tables, bold/italic, links, page breaks and images
-(`![Caption](img:1)` = first image in `sources`; `![Caption](web:what to search)` = an image from the web).
+(`![Caption](img:1)` = first image in `sources`; `![Caption](https://…)` = a picture from a link).
 
 ## Create
 
