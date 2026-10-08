@@ -69,7 +69,8 @@ curl https://api.eu.doconda.com/v1/documents \
 - `style` is free text ("Lora 11, centred title, justified, cover page, table of contents, 2 cm margins, landscape,
   footer: Confidential"). Any Google Fonts family works. What can't be applied comes back in `style_unsupported` —
   check it, it is never silently dropped.
-- `quality`: `auto` (default, Doconda picks), `fast`, `standard`, `best`. Use `max_quality` to cap the price with
+- `quality`: `auto` (default, Doconda picks), `fast` (seconds: Markdown laid out, basic style, no templates or charts),
+  `standard`, `best` (an agent builds the file, minutes). Use `max_quality` to cap the price with
   `auto`. Prices per created document: €0.30 / €0.60 / €1.50; edit €0.25 / €0.50 / €1.25. Failed documents are free.
 - `sources`: up to 5 documents (material to write from) + 10 images (placed in the document). To copy a template's
   look, put it in `sources` and say so in the prompt ("with the design of our template").
