@@ -32,7 +32,7 @@ const doconda = new Doconda() // reads DOCONDA_API_KEY, retries 429/5xx/network 
 | New document from a sentence (AI writes it) | `{ format, prompt }` |
 | New document from your text (AI only lays it out: cheaper, faster, text kept as is) | `{ format, content: { markdown } }` |
 | Write from the user's files | `{ format, prompt, sources: [...] }` |
-| Fix layout problems in an existing file (no AI, €0.03) | `{ operation: "review", file }` |
+| Fix layout problems in an existing file (no AI, €0.03 + VAT) | `{ operation: "review", file }` |
 | Change an existing file as asked, rest untouched | `{ operation: "edit", file, prompt }` |
 | Turn any file into Markdown for an LLM (free) | `POST /v1/extract { file }` |
 | A web page that stores data (poll, list, calculator) | `{ format: "artifact", prompt }` |
@@ -71,7 +71,8 @@ curl https://api.eu.doconda.com/v1/documents \
   check it, it is never silently dropped.
 - `quality`: `auto` (default, Doconda picks), `fast` (seconds: Markdown laid out, basic style, no templates or charts),
   `standard`, `best` (an agent builds the file, minutes). Use `max_quality` to cap the price with
-  `auto`. Prices per created document: €0.30 / €0.60 / €1.50; edit €0.25 / €0.50 / €1.25. Failed documents are free.
+  `auto`. Prices per document (fast / standard / best, + VAT): create from a prompt €0.15 / €0.50 / €1.50, from your
+  own Markdown (`content`) €0.05 / €0.20 / €0.60; edit €0.10 / €0.30 / €1.00. Failed documents are free.
 - `sources`: up to 5 documents (material to write from) + 10 images (placed in the document). To copy a template's
   look, put it in `sources` and say so in the prompt ("with the design of our template").
 - `?dry_run=true` validates the request and style without generating or charging.
