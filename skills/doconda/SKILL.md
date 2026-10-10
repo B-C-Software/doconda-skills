@@ -9,8 +9,8 @@ One endpoint does almost everything: `POST /v1/documents`. You say **what** you 
 and **which file** (`format`); Doconda writes it (if needed), lays it out, renders it, reviews it, fixes what it can and
 returns the files plus a report. Never generate OOXML yourself: send Markdown or a prompt.
 
-Full field tables, error codes and review codes: [reference.md](reference.md). Docs: https://docs.doconda.com
-(English pages under `/en/`).
+Full field tables, error codes and review codes: [reference.md](reference.md). Docs: <https://docs.doconda.com/en>
+(index for agents: [llms.txt](https://docs.doconda.com/llms.txt); add `.md` to any page URL to get it as Markdown).
 
 ## Setup
 
@@ -20,12 +20,25 @@ Full field tables, error codes and review codes: [reference.md](reference.md). D
 - TypeScript: `npm install @doconda/sdk` (Node ≥ 20; its only runtime dependency is `zod`). Python: `pip install doconda`.
   Other languages: plain HTTP with `Authorization: Bearer $DOCONDA_API_KEY`.
 - Messages (error `message`, report texts, `style_unsupported`, a failed document's `error.message`) are in English.
-  For Spanish pass `language: "es"` (Python `language="es"`); the SDK sends it as `Accept-Language`. A document's texts
-  keep the language of the request that created it. Branch on `code`, never on the text.
+  For Spanish pass `language: "es"` (Python `language="es"`, from `doconda` 0.2.0); the SDK sends it as
+  `Accept-Language`. A document's texts keep the language of the request that created it. Branch on `code`, never on
+  the text.
 
 ```ts
+import { readFile, writeFile } from "node:fs/promises"
 import { Doconda } from "@doconda/sdk"
 const doconda = new Doconda() // reads DOCONDA_API_KEY, retries 429/5xx/network twice
+```
+
+Python has the same methods, synchronous, with the body as keyword arguments and dicts as responses:
+
+```python
+from pathlib import Path
+from doconda import Doconda
+
+doconda = Doconda()
+doc = doconda.documents.create(format="docx", content={"markdown": "# Note\n\nHello"}, quality="fast")
+Path("note.docx").write_bytes(doconda.documents.download(doc["id"], "docx"))
 ```
 
 ## Pick the operation
@@ -37,7 +50,7 @@ const doconda = new Doconda() // reads DOCONDA_API_KEY, retries 429/5xx/network 
 | Write from the user's files | `{ format, prompt, sources: [...] }` |
 | Fix layout problems in an existing file (no AI, €0.03 + VAT) | `{ operation: "review", file }` |
 | Change an existing file as asked, rest untouched | `{ operation: "edit", file, prompt }` |
-| Turn any file into Markdown for an LLM (free up to 1,000 pages a month, then €0.01 every 5 pages) | `POST /v1/extract { file }` |
+| Turn any file into Markdown for an LLM (free up to 1,000 pages a month, then €0.01 every 5 pages) | `doconda.extract(file)` (`POST /v1/extract`) |
 | A web page that stores data (poll, list, calculator) | `{ format: "artifact", prompt }` |
 
 `format`: `docx` (Word + PDF), `pdf`, `pptx` (+ PDF), `xlsx` (+ PDF), `artifact`. Set it explicitly: if omitted it is
@@ -73,14 +86,16 @@ curl https://api.eu.doconda.com/v1/documents \
 - `style` is free text ("Lora 11, centred title, justified, cover page, table of contents, 2 cm margins, landscape,
   footer: Confidential"). Any Google Fonts family works. What can't be applied comes back in `style_unsupported` —
   check it, it is never silently dropped.
-- `quality`: `auto` (default, Doconda picks), `fast` (seconds: Markdown laid out, basic style, no templates or charts),
-  `standard`, `best` (an agent builds the file, minutes). Use `max_quality` to cap the price with
+- `quality`: `fast` (seconds: basic style, no templates or charts), `standard` (about 3 minutes: any style, templates,
+  charts), `best` (more review and design care, about 5–10 minutes) or `auto` (default). With `auto`, a `prompt` gets
+  the level it needs (the cheapest when in doubt), your Markdown (`content`) always gets `standard`, and copying a
+  file's design gets `best`. For a Markdown document in about 10 seconds, pass `quality: "fast"`. `max_quality` caps
   `auto`. Prices per document (fast / standard / best, + VAT): create from a prompt €0.15 / €0.50 / €1.50, from your
   own Markdown (`content`) €0.05 / €0.20 / €0.60; edit €0.10 / €0.30 / €1.00. Failed and canceled documents are free.
 - `sources`: up to 5 documents (material to write from) + 10 images (placed in the document). To copy a template's
-  look, put it in `sources` and say so in the prompt ("with the design of our template"): a PowerPoint template for a
-  deck works at any `quality`; any other file needs `best`. If the look can't be copied, the report says so
-  (`design.not_copied`).
+  look, put it in `sources` and say so in the prompt ("with the design of our template"): copying works at `standard` and
+  `best`; in `fast` the document keeps its own design and the report says so (`design.not_copied`). With `auto`,
+  copying any file other than a PowerPoint template for a deck picks `best`.
 - `?dry_run=true` checks the request (fields, operation, files) without generating or charging. It doesn't try the
   `style`: unsupported parts only show up in `style_unsupported` of a real run.
 
@@ -125,7 +140,8 @@ Review never changes text or values: it flags them. Edit reports each change (`r
 - To show progress in a browser, proxy the stream through your server (SSE); never ship the key to the client.
 - Webhooks: register an HTTPS endpoint (`doconda.webhooks.create({ url })`, the `secret` comes once) and get a signed
   POST when a document finishes (`document.ready` / `failed` / `canceled`, no content). Check it with
-  `verifyWebhook(rawBody, headers, secret)`, dedupe by `webhook-id`, then fetch the files.
+  `const event = await verifyWebhook(rawBody, headers, secret)` (it throws on a bad signature), dedupe by
+  `webhook-id`, then fetch the files.
 
 ## Errors and retries
 
@@ -134,7 +150,7 @@ API errors are RFC 9457 problem+json; the SDK throws `DocondaError` with `status
 (402, top up), `unauthorized`, `not_found`, `rate_limited` (120 documents/min per organization).
 
 The SDK retries network/429/5xx with an automatic `Idempotency-Key`. If **your** code may repeat an operation (job
-retries, double clicks), pass a stable key: `create(body, { idempotencyKey: \`invoice-${id}\` })` (24 h). With raw HTTP,
+retries, double clicks), pass a stable key: `` create(body, { idempotencyKey: `invoice-${id}` }) `` (24 h). With raw HTTP,
 always send `Idempotency-Key` on `POST /documents`.
 
 ## Retention
@@ -142,7 +158,7 @@ always send `Idempotency-Key` on `POST /documents`.
 Every document (artifacts too) is kept for its `retention` once it finishes: `none` (15 minutes), `1d`, `7d`, `30d`
 (default) or `90d`; the project sets the default, a request can ask for another. Then its content is deleted
 (`expires_at` says when; `/report` and `/events` return `410 content_deleted`). Download the files before, or have a
-webhook take them as soon as a document finishes.
+webhook take them as soon as a document finishes. `documents.delete(id)` deletes it sooner.
 
 ## Artifacts
 
@@ -158,13 +174,13 @@ for artifacts too: the page is built from the documents' data and the pictures g
 
 ## Giving Doconda to an AI agent
 
-- MCP (no code): `claude mcp add --transport stdio --env DOCONDA_API_KEY=ak_eu_… doconda -- npx -y @doconda/mcp`, or
+- MCP (no code): `claude mcp add --transport stdio doconda --env DOCONDA_API_KEY=ak_eu_… -- npx -y @doconda/mcp`, or
   the remote server `https://api.eu.doconda.com/mcp` with `Authorization: Bearer ak_…`.
 - Function calling: `doconda.tools()` returns tools (`create_document`, `upload_file`, `review_document`,
   `edit_document`, `list_documents`, `get_document`, `get_report`, `read_artifact_data`) with `name`, `description`,
   `inputSchema` (JSON Schema) and `run(args)`. Map them to your provider's tool format; return
   `JSON.stringify(await tool.run(input))` as the tool result. If the API answers with an error, `run` doesn't throw: it
-  returns `{ error: "<code>", message, fields? }` (`fields` on validation errors) for the model to act on.
+  returns `{ error: "<code>", message, fields? }` (`fields` on validation errors) for the model to act on (TypeScript SDK 0.4.0+, Python 0.2.0+).
 
 ## Don'ts
 

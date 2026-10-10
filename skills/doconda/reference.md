@@ -8,6 +8,7 @@
 | GET | `/documents?status=&limit=&cursor=` | `documents.list` (async iterator) / `page` |
 | GET | `/documents/{id}` | `documents.get` |
 | POST | `/documents/{id}/cancel` | `documents.cancel` |
+| DELETE | `/documents/{id}` | `documents.delete` — files, report, events (and an artifact's page and data); a running document must be canceled first |
 | POST | `/documents/{id}/versions` (multipart `file`) | — saves a hand-edited version: new doc, `parent_id`, free |
 | GET | `/documents/{id}/events` (`Last-Event-ID` or `?after=`) | `documents.events` / `wait` |
 | GET | `/documents/{id}/outputs` | `documents.outputs` / `download` |
@@ -16,6 +17,8 @@
 | POST | `/extract` | `extract` — any file → `{ id, markdown, chars, truncated, pages }`; nothing kept; past 120 s `202` → `GET /extract/{id}` (the SDKs wait) |
 | POST | `/files` (multipart `file`, or JSON `url`/`data`) | `files.upload` |
 | GET / DELETE | `/files/{id}` | `files.get` / `files.delete` |
+| POST / GET | `/webhook-endpoints` | `webhooks.create` (the `secret` comes once) / `webhooks.list` |
+| DELETE | `/webhook-endpoints/{id}` | `webhooks.delete` |
 
 MCP: `https://api.eu.doconda.com/mcp` (Streamable HTTP) or `npx -y @doconda/mcp` (stdio, `DOCONDA_API_KEY`).
 
@@ -68,6 +71,12 @@ rejected), `edits[]` (edit changes, before/after), `changes` (versions), `key_da
 | `content_deleted` / `events_expired` | 410 | retention ended / events > 7 days |
 | `file_rejected` | 422 | unsupported file type (a file with macros uploads, then its document fails with `file_rejected`) |
 | `file_too_large` / `record_too_large` | 413 | 20 MB / 16 KB |
+| `file_unreachable` | 422 | the `url` must be public and answer with the file |
+| `fst_…` | 400 / 413 / 415 | unreadable request: invalid JSON, wrong `Content-Type` or body too large (upload big files with `POST /files` first) |
+| `document_has_no_file` | 409 | the `doc_…` used as a file has no Word/PowerPoint/Excel/PDF (or isn't finished) |
+| `document_not_finished` | 409 | cancel a running document before deleting it |
+| `version_not_possible` / `file_format_mismatch` | 409 / 422 | versions: only finished documents with a file, in the same format |
+| `webhook_url_invalid` | 422 | webhook URLs must be public `https` |
 | `retention_none_shared` | 422 | with `retention: none`, an artifact must be `local` |
 | `rate_limited` | 429 | 120 docs/min per organization; artifacts 1200 reads, 120 writes/min |
 | `feature_unavailable` | 501 | AI disabled in that deployment |
@@ -75,8 +84,10 @@ rejected), `edits[]` (edit changes, before/after), `changes` (versions), `key_da
 
 ## Failed document (`status: "failed"`, `error.code`, never charged)
 
-`content_empty`, `file_rejected`, `docx_invalid`, `file_not_found`, `document_too_long` (edit > ~50 pages),
-`format_unclear` (set `format`), `edit_not_understood` / `edit_not_applied` (be more precise), `source_unreadable`,
+`content_empty`, `file_rejected` (macros, abnormal structure, a password-protected PDF, a PDF over 50 pages to review
+or edit), `docx_invalid`, `file_not_found`, `document_too_long` (an edit at `fast` or of a `.doc`/`.ppt`/`.xls` over
+3,000 paragraphs, cells or lines), `format_unclear` (set `format`), `edit_not_understood` / `edit_not_applied` (be more
+precise), `pdf_not_convertible` (a PDF edit beyond text needs a Word conversion that failed), `source_unreadable`,
 `generation_blocked` / `request_refused` (rephrase; harmful requests refused), `page_too_large`, `page_too_long`, `processing_failed`
 (retry later).
 
@@ -107,5 +118,5 @@ Content: `style.resolved`, `content.block_started`, `content.block_delta { text 
 
 `set(collection, key, data)`, `get(collection, key)`, `list(collection)` → `[{ key, data, updated_at }]`,
 `delete(collection, key)`, `subscribe(collection, cb)` → unsubscribe. Names: letters, digits, `_ - .` (≤ 64). Record ≤ 16 KB
-JSON, ≤ 5000 records per artifact. The page has no cookies or `localStorage`; it can use Tailwind, Chart.js, d3, dayjs, no
-external APIs. Embed: `<iframe src="…" sandbox="allow-scripts allow-same-origin allow-forms">`.
+JSON, ≤ 5000 records per artifact. The page saves only through `doconda.db` (with `storage: "local"`, in the visitor's
+`localStorage`); it runs sandboxed on its own subdomain and can use Tailwind, Chart.js, d3, dayjs, no external APIs. Embed: `<iframe src="…" sandbox="allow-scripts allow-same-origin allow-forms">`.

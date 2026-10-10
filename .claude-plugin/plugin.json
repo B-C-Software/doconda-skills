@@ -1,10 +1,13 @@
 {
   "name": "doconda",
   "description": "Create, review and edit Word, PowerPoint, Excel and PDF documents with Doconda: the skill to integrate its API and SDK, plus its MCP server.",
-  "version": "0.1.0",
-  "author": { "name": "Doconda", "url": "https://doconda.com" },
-  "homepage": "https://docs.doconda.com",
+  "version": "0.2.0",
+  "author": {
+    "name": "Doconda",
+    "url": "https://doconda.com"
+  },
+  "homepage": "https://docs.doconda.com/en/skill",
   "repository": "https://github.com/B-C-Software/doconda-skills",
   "license": "MIT",
-  "keywords": ["docx", "pptx", "xlsx", "pdf", "documents", "mcp"]
+  "keywords": ["docx", "pptx", "xlsx", "pdf", "word", "powerpoint", "excel", "documents", "mcp", "agent-skills"]
 }
