@@ -36,8 +36,9 @@ Claude Code, as a plugin (the skill plus Doconda's MCP server):
 ```
 
 Claude Code asks for your API key (`ak_eu_…`, from the Doconda dashboard; new accounts get free credit) when you
-install the plugin and keeps it as a secret; nothing to export. To change it later: `claude plugin configure doconda`.
-To add only the MCP server to Cursor, Codex or another client, see [MCP server](https://docs.doconda.com/en/agents/mcp).
+install the plugin and keeps it as a secret; nothing to export. To change it later:
+`claude plugin configure doconda@doconda`. To add only the MCP server to Cursor, Codex or another client, see
+[MCP server](https://docs.doconda.com/en/agents/mcp).
 
 By hand: copy `skills/doconda` into `~/.claude/skills/` (all projects) or `.claude/skills/` (one project).
 
