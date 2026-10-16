@@ -9,7 +9,7 @@
 | GET | `/documents/{id}` | `documents.get` |
 | POST | `/documents/{id}/cancel` | `documents.cancel` |
 | DELETE | `/documents/{id}` | `documents.delete` — files, report, events (and an artifact's page and data); a running document must be canceled first |
-| POST | `/documents/{id}/versions` (multipart `file`) | — saves a hand-edited version: new doc, `parent_id`, free |
+| PUT | `/documents/{id}/file` (multipart `revision` then `file`, or JSON) | — saves a hand-edited file over the same document: `revision` + 1, new PDF/report, free |
 | GET | `/documents/{id}/events` (`Last-Event-ID` or `?after=`) | `documents.events` / `wait` |
 | GET | `/documents/{id}/outputs` | `documents.outputs` / `download` |
 | GET | `/documents/{id}/report` | `documents.report` |
@@ -53,7 +53,7 @@ Key fields: `id`, `status` (`queued` · `running` · `ready` · `ready_with_warn
 unless `failed`), `retention`, `expires_at`.
 
 Report: `issues[] { code, severity, message, fixable, location { pages | sheet, cells } }`, `ledger[]` (fixes applied or
-rejected), `edits[]` (edit changes, before/after), `changes` (versions), `key_data`, `sanitized.removed`.
+rejected), `edits[]` (edit changes, before/after), `changes` (hand-saved files), `key_data`, `sanitized.removed`.
 
 ## HTTP errors (`code`)
 
@@ -75,7 +75,7 @@ rejected), `edits[]` (edit changes, before/after), `changes` (versions), `key_da
 | `fst_…` | 400 / 413 / 415 | unreadable request: invalid JSON, wrong `Content-Type` or body too large (upload big files with `POST /files` first) |
 | `document_has_no_file` | 409 | the `doc_…` used as a file has no Word/PowerPoint/Excel/PDF (or isn't finished) |
 | `document_not_finished` | 409 | cancel a running document before deleting it |
-| `version_not_possible` / `file_format_mismatch` | 409 / 422 | versions: only finished documents with a file, in the same format |
+| `revision_conflict` / `document_busy` / `file_format_mismatch` | 409 / 409 / 422 | hand-saved file: someone saved after you opened it · still being made or saved · not the document's format |
 | `webhook_url_invalid` | 422 | webhook URLs must be public `https` |
 | `retention_none_shared` | 422 | with `retention: none`, an artifact must be `local` |
 | `rate_limited` | 429 | 120 docs/min per organization; artifacts 1200 reads, 120 writes/min |
@@ -107,7 +107,7 @@ precise), `pdf_not_convertible` (a PDF edit beyond text needs a Word conversion 
 Shape: `{ id, type, version, document_id, sequence, timestamp, display?: { es, en }, data }` (`display` only on some events). `sequence` is gapless per
 document and is the SSE `id:`. Heartbeat every 15 s; the server closes after the final event.
 
-Lifecycle: `document.created`, `document.started`, `document.ready` ⏹, `document.failed` ⏹, `document.canceled` ⏹.
+Lifecycle: `document.created`, `document.started`, `document.ready` ⏹, `document.failed` ⏹, `document.canceled` ⏹. Hand-saved file (`PUT /documents/{id}/file`): `document.updated` ⏹ or `document.update_failed` ⏹ (the document stays as it was).
 Content: `style.resolved`, `content.block_started`, `content.block_delta { text }`, `content.block_completed`,
 `edit.planned`, `edit.operation_applied`, `edit.operation_rejected`. Process: `render.completed`,
 `validation.issue_found`, `validation.completed`, `repair.applied`, `repair.rejected`, `preview.page_ready { page, total }`,

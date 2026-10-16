@@ -109,6 +109,7 @@ Anywhere a file goes (`file`, `sources[]`) you can pass:
 const file = await doconda.files.upload(await readFile("contract.docx"), "contract.docx")
 const reviewed = await doconda.documents.create({ operation: "review", file: file.id })
 const edited = await doconda.documents.create({ operation: "edit", file: file.id, prompt: "Add a confidentiality clause" })
+const saved = await doconda.documents.updateFile(doc.id, editedBytes, { filename: "report.docx", revision: doc.revision }) // a file edited by hand, saved over the same document
 ```
 
 ## Check the result — always
