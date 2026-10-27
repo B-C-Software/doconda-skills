@@ -176,7 +176,8 @@ for artifacts too: the page is built from the documents' data and the pictures g
 ## Giving Doconda to an AI agent
 
 - MCP (no code): `claude mcp add --transport stdio doconda --env DOCONDA_API_KEY=ak_eu_… -- npx -y @doconda/mcp`, or
-  the remote server `https://api.eu.doconda.com/mcp` with `Authorization: Bearer ak_…`.
+  the remote server `https://api.eu.doconda.com/mcp`: clients with MCP authorization sign in with the user's Doconda
+  account (OAuth, no key); anything else sends `Authorization: Bearer ak_…`.
 - Function calling: `doconda.tools()` returns tools (`create_document`, `upload_file`, `review_document`,
   `edit_document`, `list_documents`, `get_document`, `get_report`, `read_artifact_data`) with `name`, `description`,
   `inputSchema` (JSON Schema) and `run(args)`. Map them to your provider's tool format; return

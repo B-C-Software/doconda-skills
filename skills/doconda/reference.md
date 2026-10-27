@@ -19,8 +19,10 @@
 | GET / DELETE | `/files/{id}` | `files.get` / `files.delete` |
 | POST / GET | `/webhook-endpoints` | `webhooks.create` (the `secret` comes once) / `webhooks.list` |
 | DELETE | `/webhook-endpoints/{id}` | `webhooks.delete` |
+| POST | `/editor/collab/token` (`{ room }`) | `editor.collabToken` / `editor.collab_token` — `{ token, expires_at }` for the editor plugin's real-time co-editing on Doconda's server (`collab={{ token }}`); one room, the licence's domains, 10 minutes; needs an active editor licence |
 
-MCP: `https://api.eu.doconda.com/mcp` (Streamable HTTP) or `npx -y @doconda/mcp` (stdio, `DOCONDA_API_KEY`).
+MCP: `https://api.eu.doconda.com/mcp` (Streamable HTTP; OAuth sign-in or `Authorization: Bearer ak_…`) or
+`npx -y @doconda/mcp` (stdio, `DOCONDA_API_KEY`).
 
 ## `POST /documents` body
 
@@ -63,6 +65,7 @@ rejected), `edits[]` (edit changes, before/after), `changes` (hand-saved files),
 | `unauthorized` | 401 | bad/revoked key |
 | `insufficient_balance` | 402 | top up in the dashboard |
 | `session_required` | 403 | dashboard-only route |
+| `account_blocked` | 403 | organization blocked by Doconda; don't retry |
 | `not_found` | 404 | wrong project/organization |
 | `report_not_ready` | 409 | wait for the document to finish |
 | `idempotency_request_in_progress` | 409 | retry in seconds |
@@ -77,6 +80,7 @@ rejected), `edits[]` (edit changes, before/after), `changes` (hand-saved files),
 | `document_not_finished` | 409 | cancel a running document before deleting it |
 | `revision_conflict` / `document_busy` / `file_format_mismatch` | 409 / 409 / 422 | hand-saved file: someone saved after you opened it · still being made or saved · not the document's format |
 | `webhook_url_invalid` | 422 | webhook URLs must be public `https` |
+| `editor_unlicensed` | 403 | `/editor/collab/token`: the organization has no active editor licence |
 | `retention_none_shared` | 422 | with `retention: none`, an artifact must be `local` |
 | `rate_limited` | 429 | 120 docs/min per organization; artifacts 1200 reads, 120 writes/min |
 | `feature_unavailable` | 501 | AI disabled in that deployment |
