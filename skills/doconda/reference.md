@@ -55,7 +55,8 @@ Key fields: `id`, `status` (`queued` · `running` · `ready` · `ready_with_warn
 unless `failed`), `retention`, `expires_at`.
 
 Report: `issues[] { code, severity, message, fixable, location { pages | sheet, cells } }`, `ledger[]` (fixes applied or
-rejected), `edits[]` (edit changes, before/after), `changes` (hand-saved files), `key_data`, `sanitized.removed`.
+rejected), `changes[]` (what an edit or a hand-saved file added, changed or removed, before/after; `edits[]` only on
+edits before 2026-10-28), `key_data`, `sanitized.removed`.
 
 ## HTTP errors (`code`)
 
@@ -89,9 +90,9 @@ rejected), `edits[]` (edit changes, before/after), `changes` (hand-saved files),
 ## Failed document (`status: "failed"`, `error.code`, never charged)
 
 `content_empty`, `file_rejected` (macros, abnormal structure, a password-protected PDF, a PDF over 50 pages to review
-or edit), `docx_invalid`, `file_not_found`, `document_too_long` (an edit at `fast` or of a `.doc`/`.ppt`/`.xls` over
-3,000 paragraphs, cells or lines), `format_unclear` (set `format`), `edit_not_understood` / `edit_not_applied` (be more
-precise), `pdf_not_convertible` (a PDF edit beyond text needs a Word conversion that failed), `source_unreadable`,
+or edit), `docx_invalid`, `file_not_found`, `format_unclear` (set `format`), `design_needs_quality` (copying a file's
+design at `fast`: use `standard` or `best`), `agent_failed` / `agent_not_delivered` (the agent couldn't finish; retry or
+rephrase), `agent_unavailable` (retry in a few minutes), `source_unreadable`,
 `generation_blocked` / `request_refused` (rephrase; harmful requests refused), `page_too_large`, `page_too_long`, `processing_failed`
 (retry later).
 
@@ -102,7 +103,7 @@ precise), `pdf_not_convertible` (a PDF edit beyond text needs a Word conversion 
 - PowerPoint: `pptx.text_overflow`, `pptx.shape_off_slide`, `pptx.text_too_small`, `pptx.no_title`, `pptx.image_low_resolution`.
 - Excel: `xlsx.formula_error`, `xlsx.broken_reference`, `xlsx.number_as_text`, `xlsx.date_as_text`, `xlsx.hidden_data`.
 - PDF: `pdf.no_text_layer` (OCR added), `pdf.fonts_not_embedded`, `pdf.blank_page`, `pdf.untagged`.
-- Any: `money.words_mismatch`, `font.missing`, `agent.fallback` (the agent couldn't finish; the fast path made it).
+- Any: `money.words_mismatch`, `font.missing`, `agent.unresolved` (the agent ran out of steps with problems left; check the file).
 - Content checks on AI-written text: `content.unsupported_fact`, `content.unsupported_citation`, `content.unclear`,
   `content.contradiction`, `image.web_source`.
 
@@ -112,11 +113,10 @@ Shape: `{ id, type, version, document_id, sequence, timestamp, display?: { es, e
 document and is the SSE `id:`. Heartbeat every 15 s; the server closes after the final event.
 
 Lifecycle: `document.created`, `document.started`, `document.ready` ⏹, `document.failed` ⏹, `document.canceled` ⏹. Hand-saved file (`PUT /documents/{id}/file`): `document.updated` ⏹ or `document.update_failed` ⏹ (the document stays as it was).
-Content: `style.resolved`, `content.block_started`, `content.block_delta { text }`, `content.block_completed`,
-`edit.planned`, `edit.operation_applied`, `edit.operation_rejected`. Process: `render.completed`,
+Content: `style.resolved`, `content.block_started`, `content.block_delta { text }`, `content.block_completed`. Process: `render.completed`,
 `validation.issue_found`, `validation.completed`, `repair.applied`, `repair.rejected`, `preview.page_ready { page, total }`,
 `output.available`. Routing: `request.understood`, `quality.chosen`, `route.chosen`. Agent: `agent.started`, `agent.step`,
-`agent.checked`, `agent.delivered`, `agent.failed`, `design.chosen`, `deck.reviewed`, `artifact.checked`. New types can appear: ignore unknown ones.
+`agent.checked`, `agent.delivered`, `design.chosen`, `artifact.checked`. New types can appear: ignore unknown ones.
 
 ## Artifact page API (`window.doconda.db`)
 

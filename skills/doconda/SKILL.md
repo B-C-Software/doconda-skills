@@ -86,16 +86,17 @@ curl https://api.eu.doconda.com/v1/documents \
 - `style` is free text ("Lora 11, centred title, justified, cover page, table of contents, 2 cm margins, landscape,
   footer: Confidential"). Any Google Fonts family works. What can't be applied comes back in `style_unsupported` —
   check it, it is never silently dropped.
-- `quality`: `fast` (seconds: basic style, no templates or charts), `standard` (minutes: any style, templates,
-  charts), `best` (more review and design care, longer than `standard`) or `auto` (default). With `auto`, a `prompt` gets
-  the level it needs (the cheapest when in doubt), your Markdown (`content`) always gets `standard`, and copying a
-  file's design gets `best`. For a Markdown document in seconds, pass `quality: "fast"`. `max_quality` caps
+- `quality`: every level is made by an AI agent in a sandbox, with any style, templates and charts; levels differ in
+  steps and how often it looks at the rendered pages. `fast` (about a minute; can't copy a file's design), `standard`
+  (a few minutes), `best` (most care, longer than `standard`) or `auto` (default). With `auto`, a `prompt` gets the level
+  it needs (the cheapest when in doubt), your Markdown (`content`) always gets `standard`, and copying a file's design
+  gets at least `standard` (`best` unless it's a PowerPoint template for a deck). For a quicker Markdown document, pass
+  `quality: "fast"`. `max_quality` caps
   `auto`. Prices per document (fast / standard / best, + VAT): create from a prompt €0.15 / €0.50 / €1.50, from your
   own Markdown (`content`) €0.05 / €0.20 / €0.60; edit €0.10 / €0.30 / €1.00. Failed and canceled documents are free.
 - `sources`: up to 5 documents (material to write from) + 10 images (placed in the document). To copy a template's
   look, put it in `sources` and say so in the prompt ("with the design of our template"): copying works at `standard` and
-  `best`; in `fast` the document keeps its own design and the report says so (`design.not_copied`). With `auto`,
-  copying any file other than a PowerPoint template for a deck picks `best`.
+  `best`; with `quality: "fast"` the document fails with `design_needs_quality` (not charged).
 - `?dry_run=true` checks the request (fields, operation, files) without generating or charging. It doesn't try the
   `style`: unsupported parts only show up in `style_unsupported` of a real run.
 
@@ -117,14 +118,14 @@ const saved = await doconda.documents.updateFile(doc.id, editedBytes, { filename
 ```ts
 if (doc.status === "failed") throw new Error(`${doc.error?.code}: ${doc.error?.message}`) // not an exception, not charged
 if (doc.status === "needs_review") {
-  const report = await doconda.documents.report(doc.id) // issues, ledger (fixes), edits, key_data
+  const report = await doconda.documents.report(doc.id) // issues, ledger (fixes), changes, key_data
 }
 ```
 
 `create` and `wait` return a final `status`: `ready` · `ready_with_warnings` · `needs_review` (done, but something needs
 a human look) · `failed` (`error` says why) · `canceled` (`documents.cancel`). Failed and canceled are not charged.
 `queued` and `running` only show up from `createInBackground`, `get` or `list`.
-Review never changes text or values: it flags them. Edit reports each change (`report.edits`, `rejected` with reason).
+Review never changes text or values: it flags them. Edit reports what changed (`report.changes`, before/after).
 
 ## Links expire
 
