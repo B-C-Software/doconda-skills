@@ -1,15 +1,15 @@
 ---
 name: doconda
-description: Integrate Doconda, the API that creates, reviews and edits Word, PowerPoint, Excel and PDF documents (and "artifacts", web pages with their own data) for apps and AI agents. Use when writing code that calls the Doconda API, the @doconda/sdk TypeScript SDK or the @doconda/mcp server; when generating .docx/.pptx/.xlsx/.pdf files from an app or agent; when the code imports @doconda/sdk, uses DOCONDA_API_KEY, an `ak_eu_` key or api.eu.doconda.com, or imports the doconda Python package.
+description: Integrate Doconda, the API that converts, creates and edits Word, PowerPoint, Excel and PDF documents (and "artifacts", web pages with their own data) for apps and AI agents. Use when writing code that calls the Doconda API, the @doconda/sdk TypeScript SDK or the @doconda/mcp server; when generating .docx/.pptx/.xlsx/.pdf files from an app or agent; when the code imports @doconda/sdk, uses DOCONDA_API_KEY, an `ak_eu_` key or api.eu.doconda.com, or imports the doconda Python package.
 ---
 
 # Doconda
 
 One endpoint does almost everything: `POST /v1/documents`. You say **what** you want (a sentence, or your Markdown)
-and **which file** (`format`); Doconda writes it (if needed), lays it out, renders it, reviews it, fixes what it can and
-returns the files plus a report. Never generate OOXML yourself: send Markdown or a prompt.
+and **which file** (`format`); Doconda writes it (if needed), lays it out, renders it, checks and fixes it, and
+returns the files. Never generate OOXML yourself: send Markdown or a prompt.
 
-Full field tables, error codes and review codes: [reference.md](reference.md). Docs: <https://docs.doconda.com/en>
+Full field tables and error codes: [reference.md](reference.md). Docs: <https://docs.doconda.com/en>
 (index for agents: [llms.txt](https://docs.doconda.com/llms.txt); add `.md` to any page URL to get it as Markdown).
 
 ## Setup
@@ -19,7 +19,7 @@ Full field tables, error codes and review codes: [reference.md](reference.md). D
 - Keep it in `DOCONDA_API_KEY`. **Server side only**: the key gives access to every document in the project.
 - TypeScript: `npm install @doconda/sdk` (Node ≥ 20; its only runtime dependency is `zod`). Python: `pip install doconda`.
   Other languages: plain HTTP with `Authorization: Bearer $DOCONDA_API_KEY`.
-- Messages (error `message`, report texts, `style_unsupported`, a failed document's `error.message`) are in English.
+- Messages (error `message`, a failed document's `error.message`) are in English.
   For Spanish pass `language: "es"` (Python `language="es"`, from `doconda` 0.2.0); the SDK sends it as
   `Accept-Language`. A document's texts keep the language of the request that created it. Branch on `code`, never on
   the text.
@@ -48,9 +48,8 @@ Path("note.docx").write_bytes(doconda.documents.download(doc["id"], "docx"))
 | New document from a sentence (AI writes it) | `{ format, prompt }` |
 | New document from your text (AI only lays it out: cheaper, faster, text kept as is) | `{ format, content: { markdown } }` |
 | Write from the user's files | `{ format, prompt, sources: [...] }` |
-| Fix layout problems in an existing file (no AI, €0.03 + VAT) | `{ operation: "review", file }` |
 | Change an existing file as asked, rest untouched | `{ operation: "edit", file, prompt }` |
-| Turn any file into Markdown for an LLM (free up to 1,000 pages a month, then €0.01 every 5 pages) | `doconda.extract(file)` (`POST /v1/extract`) |
+| Turn a file into another format, no AI: any file → Markdown for an LLM, Markdown → Word, PDF → Word, anything → PDF (free up to 1,000 a month, then €0.01 each) | `doconda.convert(file, to)` (`POST /v1/convert`) |
 | A web page that stores data (poll, list, calculator) | `{ format: "artifact", prompt }` |
 
 `format`: `docx` (Word + PDF), `pdf`, `pptx` (+ PDF), `xlsx` (+ PDF), `artifact`. Set it explicitly: if omitted it is
@@ -84,8 +83,8 @@ curl https://api.eu.doconda.com/v1/documents \
 - `create` waits until it finishes (like an LLM call). Over 120 s the raw API answers `202`; the SDK keeps waiting and
   reconnects on its own if the connection drops.
 - `style` is free text ("Lora 11, centred title, justified, cover page, table of contents, 2 cm margins, landscape,
-  footer: Confidential"). Any Google Fonts family works. What can't be applied comes back in `style_unsupported` —
-  check it, it is never silently dropped.
+  footer: Confidential"). Any Google Fonts family works; a font that isn't available is replaced by the
+  closest one.
 - `quality`: every level is made by an AI agent in a sandbox, with any style, templates and charts; levels differ in
   steps and how often it looks at the rendered pages. `fast` (about a minute; can't copy a file's design), `standard`
   (a few minutes), `best` (most care, longer than `standard`) or `auto` (default). With `auto`, a `prompt` gets the level
@@ -98,7 +97,7 @@ curl https://api.eu.doconda.com/v1/documents \
   look, put it in `sources` and say so in the prompt ("with the design of our template"): copying works at `standard` and
   `best`; with `quality: "fast"` the document fails with `design_needs_quality` (not charged).
 - `?dry_run=true` checks the request (fields, operation, files) without generating or charging. It doesn't try the
-  `style`: unsupported parts only show up in `style_unsupported` of a real run.
+  `style`.
 
 ## Files
 
@@ -108,7 +107,7 @@ Anywhere a file goes (`file`, `sources[]`) you can pass:
 
 ```ts
 const file = await doconda.files.upload(await readFile("contract.docx"), "contract.docx")
-const reviewed = await doconda.documents.create({ operation: "review", file: file.id })
+const markdown = (await doconda.convert(file.id, "md")).text // md/txt/html/csv come back as text; docx/pdf/… as output.url (5 min)
 const edited = await doconda.documents.create({ operation: "edit", file: file.id, prompt: "Add a confidentiality clause" })
 const saved = await doconda.documents.updateFile(doc.id, editedBytes, { filename: "report.docx", revision: doc.revision }) // a file edited by hand, saved over the same document
 ```
@@ -117,15 +116,11 @@ const saved = await doconda.documents.updateFile(doc.id, editedBytes, { filename
 
 ```ts
 if (doc.status === "failed") throw new Error(`${doc.error?.code}: ${doc.error?.message}`) // not an exception, not charged
-if (doc.status === "needs_review") {
-  const report = await doconda.documents.report(doc.id) // issues, ledger (fixes), changes, key_data
-}
+const { changes } = await doconda.documents.report(edited.id) // what an edit changed, before/after
 ```
 
-`create` and `wait` return a final `status`: `ready` · `ready_with_warnings` · `needs_review` (done, but something needs
-a human look) · `failed` (`error` says why) · `canceled` (`documents.cancel`). Failed and canceled are not charged.
-`queued` and `running` only show up from `createInBackground`, `get` or `list`.
-Review never changes text or values: it flags them. Edit reports what changed (`report.changes`, before/after).
+`create` and `wait` return a final `status`: `ready` · `failed` (`error` says why) · `canceled` (`documents.cancel`).
+Failed and canceled are not charged. `queued` and `running` only show up from `createInBackground`, `get` or `list`.
 
 ## Links expire
 
@@ -135,11 +130,9 @@ Review never changes text or values: it flags them. Edit reports what changed (`
 ## Long work, live progress
 
 - `documents.createInBackground(body)` → store `doc.id` → `documents.wait(id)` later (job queues, serverless).
-- `documents.stream(body)` yields events: `content.block_delta` (text as written), `preview.page_ready`,
-  `document.ready`/`document.failed`/`document.canceled` (final). Many events carry `display` (`{ es, en }`), a ready
-  UI label; it is optional (`content.block_delta` has none). Ignore unknown event types.
-- Resume with `documents.events(id, { after: lastSequence })`. Disconnecting does not stop the document.
-- To show progress in a browser, proxy the stream through your server (SSE); never ship the key to the client.
+- Step-by-step progress (logs, progress bars): `documents.events(id, { after: lastSequence })`. Disconnecting does not
+  stop the document.
+- To show progress in a browser, proxy the events through your server (SSE); never ship the key to the client.
 - Webhooks: register an HTTPS endpoint (`doconda.webhooks.create({ url })`, the `secret` comes once) and get a signed
   POST when a document finishes (`document.ready` / `failed` / `canceled`, no content). Check it with
   `const event = await verifyWebhook(rawBody, headers, secret)` (it throws on a bad signature), dedupe by
@@ -179,7 +172,7 @@ for artifacts too: the page is built from the documents' data and the pictures g
 - MCP (no code): `claude mcp add --transport stdio doconda --env DOCONDA_API_KEY=ak_eu_… -- npx -y @doconda/mcp`, or
   the remote server `https://api.eu.doconda.com/mcp`: clients with MCP authorization sign in with the user's Doconda
   account (OAuth, no key); anything else sends `Authorization: Bearer ak_…`.
-- Function calling: `doconda.tools()` returns tools (`create_document`, `upload_file`, `review_document`,
+- Function calling: `doconda.tools()` returns tools (`create_document`, `upload_file`, `convert_file`,
   `edit_document`, `list_documents`, `get_document`, `get_report`, `read_artifact_data`) with `name`, `description`,
   `inputSchema` (JSON Schema) and `run(args)`. Map them to your provider's tool format; return
   `JSON.stringify(await tool.run(input))` as the tool result. If the API answers with an error, `run` doesn't throw: it
@@ -190,5 +183,5 @@ for artifacts too: the page is built from the documents' data and the pictures g
 - Don't build DOCX/PPTX/XLSX with another library and then send it to Doconda to "make it nice": send Markdown.
 - Don't call the API from the browser or commit the key.
 - Don't set `baseUrl` in production (`DOCONDA_BASE_URL` only for a local stack).
-- Don't treat `status: "failed"` as a thrown error, or ignore `needs_review` / `style_unsupported`.
+- Don't treat `status: "failed"` as a thrown error.
 - Don't persist output URLs.

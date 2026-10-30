@@ -3,7 +3,7 @@
 [![Validate](https://github.com/B-C-Software/doconda-skills/actions/workflows/validate.yml/badge.svg)](https://github.com/B-C-Software/doconda-skills/actions/workflows/validate.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-The [Agent Skill](https://docs.doconda.com/en/skill) for [Doconda](https://doconda.com), the API that creates, reviews
+The [Agent Skill](https://docs.doconda.com/en/skill) for [Doconda](https://doconda.com), the API that converts, creates
 and edits Word, PowerPoint, Excel and PDF documents for apps and AI agents. With it installed, your coding agent
 (Claude Code, Cursor, Codex…) writes Doconda integrations correctly: which request to send, how to check the result,
 what each error means and what not to do.
@@ -17,7 +17,7 @@ what each error means and what not to do.
   expire, idempotency, streaming, webhooks and errors (`DocondaError` codes).
 - How to give Doconda to an AI agent: MCP, or `doconda.tools()` for function calling.
 
-The full reference (endpoints, request fields, error, review and event codes) is in
+The full reference (endpoints, request fields, error, report and event codes) is in
 [`skills/doconda/reference.md`](skills/doconda/reference.md).
 
 ## Install
@@ -48,7 +48,7 @@ Ask your agent, for example:
 
 - "Add an endpoint that turns this invoice JSON into a PDF with Doconda."
 - "Our LLM writes reports in Markdown: deliver them as Word files with our brand colours."
-- "Review every .docx in `contracts/` with Doconda and list the issues it can't fix."
+- "Convert every PDF in `contracts/` to Markdown with Doconda."
 - "Give my support agent a tool to create documents with Doconda."
 
 ## Links

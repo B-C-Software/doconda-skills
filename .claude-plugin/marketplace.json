@@ -8,10 +8,10 @@
     {
       "name": "doconda",
       "source": "./",
-      "description": "Create, review and edit Word, PowerPoint, Excel and PDF documents with Doconda: the skill to integrate its API and SDK, plus its MCP server."
+      "description": "Convert, create and edit Word, PowerPoint, Excel and PDF documents with Doconda: the skill to integrate its API and SDK, plus its MCP server."
     }
   ],
   "metadata": {
-    "description": "Doconda plugins: create, review and edit Word, PowerPoint, Excel and PDF documents."
+    "description": "Doconda plugins: convert, create and edit Word, PowerPoint, Excel and PDF documents."
   }
 }
