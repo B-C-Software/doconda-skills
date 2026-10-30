@@ -10,11 +10,11 @@ what each error means and what not to do.
 
 ## What your agent learns
 
-- One endpoint for everything (`POST /v1/documents`): from a sentence or from your Markdown, to `docx`, `pdf`, `pptx`,
-  `xlsx` or an `artifact` (a web page with its own data).
-- How to check every result: `status`, `style_unsupported` and the report, instead of assuming it worked.
+- Three operations: convert (`POST /v1/convert`), create and edit (`POST /v1/documents`), from a sentence or from your
+  Markdown, to `docx`, `pdf`, `pptx`, `xlsx` or an `artifact` (a web page with its own data).
+- How to check every result: `status` and the report, instead of assuming it worked.
 - Quality levels and their time and price, copying a template's design, files and sources, retention, links that
-  expire, idempotency, streaming, webhooks and errors (`DocondaError` codes).
+  expire, idempotency, events, webhooks and errors (`DocondaError` codes).
 - How to give Doconda to an AI agent: MCP, or `doconda.tools()` for function calling.
 
 The full reference (endpoints, request fields, error, report and event codes) is in
