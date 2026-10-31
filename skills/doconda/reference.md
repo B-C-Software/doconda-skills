@@ -9,7 +9,7 @@
 | GET | `/documents/{id}` | `documents.get` |
 | POST | `/documents/{id}/cancel` | `documents.cancel` |
 | DELETE | `/documents/{id}` | `documents.delete` — files, report, events (and an artifact's page and data); a running document must be canceled first |
-| PUT | `/documents/{id}/file` (multipart `revision` then `file`, or JSON) | — saves a hand-edited file over the same document: `revision` + 1, new PDF/report, free |
+| PUT | `/documents/{id}/file` (multipart `revision` then `file`, or JSON) | `documents.updateFile` / `update_file` — saves a hand-edited file over the same document: `revision` + 1, new PDF/report, free |
 | GET | `/documents/{id}/events` (`Last-Event-ID` or `?after=`) | `documents.events` / `wait` |
 | GET | `/documents/{id}/outputs` | `documents.outputs` / `download` |
 | GET | `/documents/{id}/report` | `documents.report` |
@@ -50,7 +50,8 @@ PowerPoint, Excel (also `.doc/.ppt/.xls`, returned as modern formats), PDF, TXT,
 
 Key fields: `id`, `status` (`queued` · `running` · `ready` · `failed` · `canceled`), `format`, `type`, `pages`,
 `outputs[] { kind, url, expires_at }`, `style_applied`, `quality { requested, level, reason }`, `route`,
-`error { code, message }` (`null` unless `failed`), `retention`, `expires_at`.
+`error { code, message }` (`null` unless `failed`, or a `ready` document whose last hand-save was rejected: it keeps
+the previous file and `revision`), `retention`, `expires_at`.
 
 Report: `{ document_id, changes[] }`: what an edit or a hand-saved file added, changed or removed, before/after (empty
 for a created document).
@@ -78,9 +79,10 @@ for a created document).
 | `document_not_finished` | 409 | cancel a running document before deleting it |
 | `revision_conflict` / `document_busy` / `file_format_mismatch` | 409 / 409 / 422 | hand-saved file: someone saved after you opened it · still being made or saved · not the document's format |
 | `webhook_url_invalid` | 422 | webhook URLs must be public `https` |
+| `too_many_webhook_endpoints` | 422 | a project has at most 20 webhook endpoints |
 | `editor_unlicensed` | 403 | `/editor/collab/token`: the organization has no active editor licence |
 | `retention_none_shared` | 422 | with `retention: none`, an artifact must be `local` |
-| `rate_limited` | 429 | 120 docs/min per organization; artifacts 1200 reads, 120 writes/min |
+| `rate_limited` | 429 | 120 docs/min per organization; artifacts 1200 reads, 120 writes/min; wait `Retry-After` seconds |
 | `feature_unavailable` | 501 | AI disabled in that deployment |
 | `internal_error` | 500 | retry; report `request_id` |
 

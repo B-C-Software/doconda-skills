@@ -3,7 +3,7 @@
 [![Validate](https://github.com/B-C-Software/doconda-skills/actions/workflows/validate.yml/badge.svg)](https://github.com/B-C-Software/doconda-skills/actions/workflows/validate.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-The [Agent Skill](https://docs.doconda.com/en/skill) for [Doconda](https://doconda.com), the API that converts, creates
+The [Agent Skill](https://docs.doconda.com/skill) for [Doconda](https://doconda.com), the API that converts, creates
 and edits Word, PowerPoint, Excel and PDF documents for apps and AI agents. With it installed, your coding agent
 (Claude Code, Cursor, Codex…) writes Doconda integrations correctly: which request to send, how to check the result,
 what each error means and what not to do.
@@ -38,7 +38,7 @@ Claude Code, as a plugin (the skill plus Doconda's MCP server):
 Claude Code asks for your API key (`ak_eu_…`, from the Doconda dashboard; new accounts get free credit) when you
 install the plugin and keeps it as a secret; nothing to export. To change it later:
 `claude plugin configure doconda@doconda`. To add only the MCP server to Cursor, Codex or another client, see
-[MCP server](https://docs.doconda.com/en/agents/mcp).
+[MCP server](https://docs.doconda.com/agents/mcp).
 
 By hand: copy `skills/doconda` into `~/.claude/skills/` (all projects) or `.claude/skills/` (one project).
 
@@ -53,7 +53,7 @@ Ask your agent, for example:
 
 ## Links
 
-- [Docs](https://docs.doconda.com/en) · [TypeScript SDK](https://www.npmjs.com/package/@doconda/sdk) ·
+- [Docs](https://docs.doconda.com) · [TypeScript SDK](https://www.npmjs.com/package/@doconda/sdk) ·
   [Python SDK](https://pypi.org/project/doconda/) · [MCP server](https://www.npmjs.com/package/@doconda/mcp)
 - [Runnable examples](https://github.com/B-C-Software/doconda-examples) for Bedrock, Vertex AI, OpenAI, Claude,
   LangGraph, the Vercel AI SDK, Mastra and more

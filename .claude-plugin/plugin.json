@@ -1,12 +1,12 @@
 {
   "name": "doconda",
   "description": "Convert, create and edit Word, PowerPoint, Excel and PDF documents with Doconda: the skill to integrate its API and SDK, plus its MCP server.",
-  "version": "0.4.2",
+  "version": "0.4.4",
   "author": {
     "name": "Doconda",
     "url": "https://doconda.com"
   },
-  "homepage": "https://docs.doconda.com/en/skill",
+  "homepage": "https://docs.doconda.com/skill",
   "repository": "https://github.com/B-C-Software/doconda-skills",
   "license": "MIT",
   "keywords": ["docx", "pptx", "xlsx", "pdf", "word", "powerpoint", "excel", "documents", "mcp", "agent-skills"],

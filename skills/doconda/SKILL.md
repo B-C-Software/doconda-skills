@@ -9,7 +9,7 @@ One endpoint does almost everything: `POST /v1/documents`. You say **what** you 
 and **which file** (`format`); Doconda writes it (if needed), lays it out, renders it, checks and fixes it, and
 returns the files. Never generate OOXML yourself: send Markdown or a prompt.
 
-Full field tables and error codes: [reference.md](reference.md). Docs: <https://docs.doconda.com/en>
+Full field tables and error codes: [reference.md](reference.md). Docs: <https://docs.doconda.com>
 (index for agents: [llms.txt](https://docs.doconda.com/llms.txt); add `.md` to any page URL to get it as Markdown).
 
 ## Setup
@@ -27,7 +27,7 @@ Full field tables and error codes: [reference.md](reference.md). Docs: <https://
 ```ts
 import { readFile, writeFile } from "node:fs/promises"
 import { Doconda } from "@doconda/sdk"
-const doconda = new Doconda() // reads DOCONDA_API_KEY, retries 429/5xx/network twice
+const doconda = new Doconda() // reads DOCONDA_API_KEY; retries reads and creates on 429/5xx/network twice
 ```
 
 Python has the same methods, synchronous, with the body as keyword arguments and dicts as responses:
@@ -58,7 +58,8 @@ contract…): Doconda infers it from the prompt; `doc.type` says what it chose.
 
 If the app already has the text (an LLM wrote it, a template filled it), send `content.markdown`, not `prompt`.
 Markdown supports headings, paragraphs, lists, tables, bold/italic, links, page breaks and images
-(`![Caption](img:1)` = first image in `sources`; `![Caption](https://…)` = a picture from a link).
+(`![Caption](img:1)` = first image in `sources`; `![Caption](https://…)` = a picture from a link, up to 10 per
+document, 50 MB and 2 minutes of downloads in total; past that they stay as plain links).
 
 ## Create
 
@@ -134,7 +135,8 @@ Failed and canceled are not charged. `queued` and `running` only show up from `c
   stop the document.
 - To show progress in a browser, proxy the events through your server (SSE); never ship the key to the client.
 - Webhooks: register an HTTPS endpoint (`doconda.webhooks.create({ url })`, the `secret` comes once) and get a signed
-  POST when a document finishes (`document.ready` / `failed` / `canceled`, no content). Check it with
+  POST when a document finishes (`document.ready` / `failed` / `canceled`) or a hand-save ends (`document.updated` /
+  `update_failed`), with no content. Check it with
   `const event = await verifyWebhook(rawBody, headers, secret)` (it throws on a bad signature), dedupe by
   `webhook-id`, then fetch the files.
 
@@ -144,7 +146,8 @@ API errors are RFC 9457 problem+json; the SDK throws `DocondaError` with `status
 `message`, `errors` (422 field paths) and `requestId`. Common: `input_invalid` (fix the field), `insufficient_balance`
 (402, top up), `unauthorized`, `not_found`, `rate_limited` (120 documents/min per organization).
 
-The SDK retries network/429/5xx with an automatic `Idempotency-Key`. If **your** code may repeat an operation (job
+The SDK retries reads and `create` (with an automatic `Idempotency-Key`) on network/429/5xx, waiting `Retry-After`;
+`convert`, `files.upload`, `updateFile` and `webhooks.create` go out once. If **your** code may repeat an operation (job
 retries, double clicks), pass a stable key: `` create(body, { idempotencyKey: `invoice-${id}` }) `` (24 h). With raw HTTP,
 always send `Idempotency-Key` on `POST /documents`.
 
@@ -177,6 +180,9 @@ for artifacts too: the page is built from the documents' data and the pictures g
   `inputSchema` (JSON Schema) and `run(args)`. Map them to your provider's tool format; return
   `JSON.stringify(await tool.run(input))` as the tool result. If the API answers with an error, `run` doesn't throw: it
   returns `{ error: "<code>", message, fields? }` (`fields` on validation errors) for the model to act on (TypeScript SDK 0.4.0+, Python 0.2.0+).
+  `create_document` and `edit_document` wait up to about 4 minutes; a document that takes longer comes back with its
+  `id`, `status` and a `note`, and the model calls `get_document` later (TypeScript SDK 0.9.0+, Python 0.7.0+, MCP
+  0.6.0+). Give MCP clients a per-call timeout of 300 s.
 
 ## Don'ts
 
