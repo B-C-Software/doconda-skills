@@ -182,7 +182,9 @@ for artifacts too: the page is built from the documents' data and the pictures g
   returns `{ error: "<code>", message, fields? }` (`fields` on validation errors) for the model to act on (TypeScript SDK 0.4.0+, Python 0.2.0+).
   `create_document` and `edit_document` wait up to about 4 minutes; a document that takes longer comes back with its
   `id`, `status` and a `note`, and the model calls `get_document` later (TypeScript SDK 0.9.0+, Python 0.7.0+, MCP
-  0.6.0+). Give MCP clients a per-call timeout of 300 s.
+  0.6.0+). Give MCP clients a per-call timeout of 300 s. For a client that gives up sooner, `tools({ waitSeconds })`
+  (`tools(wait_seconds=…)` in Python; TypeScript SDK 0.10.0+, Python 0.8.0+) sets that wait; the hosted MCP server
+  answers Claude's connector after about 50 s, and Claude then calls `get_document`.
 
 ## Don'ts
 
